@@ -1,0 +1,6 @@
+context_path: review_package.run.ProjectContext
+project_name: "reviews"
+project_version: "0.16.6"
+package_name: "review_package"
+hooks:
+  - review_package.hooks.project_hooks
