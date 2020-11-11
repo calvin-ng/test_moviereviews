@@ -9,7 +9,7 @@ from sklearn.linear_model import LogisticRegressionCV
 from os import listdir
 import regex as re
 from nltk.stem.porter import PorterStemmer
-
+from sklearn.preprocessing import StandardScaler
 
 # load doc into memory
 def load_doc(filename):
@@ -94,6 +94,21 @@ X = tfidf.fit_transform(generate_doc('train'))
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.5, shuffle=False)
-clf = LogisticRegressionCV(cv=5, scoring='accuracy', random_state=0, n_jobs=-1, verbose=3, max_iter=300).fit(X_train, y_train)
+sc = StandardScaler(with_mean=False)
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
 
-print(clf.score(X_test, y_test))
+from sklearn.neighbors import KNeighborsClassifier
+# Fitting classifier to the Training set
+classifier = KNeighborsClassifier(n_neighbors = 2)
+classifier.fit(X_train, y_train)
+
+from sklearn.metrics import confusion_matrix
+# Predicting the Test set results
+y_pred = classifier.predict(X_test)
+
+
+# Making the Confusion Matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
