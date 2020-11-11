@@ -3,6 +3,9 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+import pickle
+from sklearn.linear_model import LogisticRegressionCV
 from os import listdir
 import regex as re
 from nltk.stem.porter import PorterStemmer
@@ -24,16 +27,18 @@ def process_docs(directory):
 	# walk through all files in the folder
     for i, filename in enumerate(listdir(directory)):
 		# skip files that do not have the right extension
+        id_number = filename[:filename.find('_')]
+        rating = filename[filename.find('_')+1]
         if not filename.endswith(".txt"):
             continue
 		# create the full path of the file to open
         path = directory + '/' + filename
-        if (int(filename[2])<=4):
+        if (int(rating)<=4):
             sent=0
         else:
             sent=1
 
-        df.loc[i]=(filename[0], filename[2], sent , load_doc(path))
+        df.loc[i]=(id_number, rating, sent , load_doc(path))
     return df
 
 def generate_doc(directory):
@@ -52,7 +57,7 @@ def generate_doc(directory):
 
 # def TfidfVectorizer(strip_accents,lowercase,preprocessor,tokenizer,use_idf, norm, smooth_idf):
 #     count = CountVectorizer()
-#     docs = generate_doc('neg')
+#     docs = generate_doc('train')
 #     bag = count.fit_transform(docs)
 #     # print(count.vocabulary_)
 #     #print(bag.toarray())
@@ -82,5 +87,13 @@ tfidf = TfidfVectorizer(strip_accents=None,
     norm='l2',
     smooth_idf=True)
 
+df = process_docs('train')
 y = df.sentiment.values
-X = tfidf.fit_transform(df.review.values)
+y=y.astype('int')
+X = tfidf.fit_transform(generate_doc('train'))
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.5, shuffle=False)
+clf = LogisticRegressionCV(cv=5, scoring='accuracy', random_state=0, n_jobs=-1, verbose=3, max_iter=300).fit(X_train, y_train)
+
+print(clf.score(X_test, y_test))
