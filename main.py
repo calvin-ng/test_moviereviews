@@ -53,19 +53,6 @@ def generate_doc(directory):
     return doc
 
 
-
-
-# def TfidfVectorizer(strip_accents,lowercase,preprocessor,tokenizer,use_idf, norm, smooth_idf):
-#     count = CountVectorizer()
-#     docs = generate_doc('train')
-#     bag = count.fit_transform(docs)
-#     # print(count.vocabulary_)
-#     #print(bag.toarray())
-#
-#     np.set_printoptions(precision=2)
-#     tfidf = TfidfTransformer(use_idf=True, norm='l2', smooth_idf=True)
-#     return tfidf.fit_transform(bag).toarray()
-
 def preprocessor(text):
     text =re.sub('<[^>]*>','', text)
     emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|\(|D|P)', text)
@@ -79,6 +66,7 @@ def tokenizer(text):
 def tokenizer_stemmer(text):
     return[porter.stem(word) for word in text.split()]
 
+#set_params
 tfidf = TfidfVectorizer(strip_accents=None,
     lowercase=True,
     preprocessor=preprocessor, # defined preprocessor in Data Cleaning
@@ -87,20 +75,22 @@ tfidf = TfidfVectorizer(strip_accents=None,
     norm='l2',
     smooth_idf=True)
 
-df = process_docs('train')
-y = df.sentiment.values
+df = process_docs('train') #node by itself, define in catalog a df; only extract train - get two df
+y = df.sentiment.values #part of tfidf node
 y=y.astype('int')
-X = tfidf.fit_transform(generate_doc('train'))
+X = tfidf.fit_transform(generate_doc('train')) #should be after 84 (only use train) just call transform, with use of set_params
 
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.5, shuffle=False)
-sc = StandardScaler(with_mean=False)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.5, shuffle=False) #take ~0.1 test size
+
+
+sc = StandardScaler(with_mean=False) #node
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
 from sklearn.neighbors import KNeighborsClassifier
 # Fitting classifier to the Training set
-classifier = KNeighborsClassifier(n_neighbors = 2)
+classifier = KNeighborsClassifier(n_neighbors = 2) #try to find best k-value
 classifier.fit(X_train, y_train)
 
 from sklearn.metrics import confusion_matrix
